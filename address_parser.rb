@@ -27,6 +27,7 @@ module FasTMassMailing
       address.each do |key, value|
         raise "Missing #{key} for: #{address}" if value.nil? || value == ''
       end
+      raise "Wrong PLZ for: #{address}" if address[:plz].length != 5
     end
 
     def self.read_cards_from_vcf_file(file)

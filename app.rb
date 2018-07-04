@@ -2,6 +2,7 @@
 
 require 'byebug'
 require './address_parser'
+require './letters_pdf'
 
 vcf_file = ARGV.first
 
@@ -11,5 +12,16 @@ abort('Specified CSV file does not exist.') unless File.exist? vcf_file
 begin
   addresses = FasTMassMailing::AddressParser.parse_vcf_file(vcf_file)
 rescue RuntimeError => error
-  abort(error)
+  abort(error.to_s)
 end
+
+addresses.sort_by! { |address| address[:plz] }
+
+pdf = FasTMassMailing::LettersPDF.new
+
+addresses.each_with_index do |address, i|
+  puts "Adding letter #{i+1} of #{addresses.count}"
+  pdf.add_letter(address)
+end
+
+pdf.render_file('letters.pdf')
