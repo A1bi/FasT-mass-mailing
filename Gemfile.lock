@@ -1,0 +1,30 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.5.2)
+      public_suffix (>= 2.0.2, < 4.0)
+    byebug (10.0.2)
+    css_parser (1.6.0)
+      addressable
+    pdf-core (0.7.0)
+    prawn (2.2.2)
+      pdf-core (~> 0.7.0)
+      ttfunk (~> 1.5)
+    prawn-svg (0.27.1)
+      css_parser (~> 1.3)
+      prawn (>= 0.11.1, < 3)
+    public_suffix (3.0.2)
+    ttfunk (1.5.1)
+    vcardigan (0.0.9)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  byebug
+  prawn (~> 2.2.2)
+  prawn-svg (~> 0.27.1)
+  vcardigan (~> 0.0.9)
+
+BUNDLED WITH
+   1.16.1
