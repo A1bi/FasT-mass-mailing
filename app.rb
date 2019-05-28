@@ -1,30 +1,51 @@
 # frozen_string_literal: true
 
+require 'optparse'
 require 'byebug'
 require './address_parser'
 require './letters_pdf'
 
 action = ARGV.first
+options = {}
 
-abort('Please specify one of the following actions: list, letters.') unless %w[letters list].include? action
+abort('Please specify one of the following actions: list, letters, sample.') unless %w[letters list sample].include? action
 
-vcf_file = ARGV.last
+OptionParser.new do |opts|
+  opts.banner = "Usage: app.rb #{action} [options]"
 
-abort('Please specify a CSV file containing addresses.') if vcf_file.nil?
-abort('Specified CSV file does not exist.') unless File.exist? vcf_file
+  unless action == 'list'
+    opts.on('--content CONTENT', 'specify content') do |value|
+      options[:content_name] = value
+    end
+  end
 
-begin
-  addresses = FasTMassMailing::AddressParser.parse_vcf_file(vcf_file)
-rescue RuntimeError => error
-  abort(error.to_s)
+  unless action == 'sample'
+    opts.on('--vcf-file PATH', 'specify content') do |value|
+      options[:vcf_path] = value
+    end
+  end
+end.parse!
+
+unless action == 'sample'
+  abort('Specified VCF file does not exist.') unless File.exist? options[:vcf_path]
+
+  begin
+    addresses = FasTMassMailing::AddressParser.parse_vcf_file(options[:vcf_path])
+  rescue RuntimeError => e
+    abort(e.to_s)
+  end
+
+  addresses.sort_by! { |address| address[:plz] }
 end
 
-addresses.sort_by! { |address| address[:plz] }
+unless action == 'list'
+  abort('Specified content file does not exist.') unless File.exist? "content/#{options[:content_name]}.txt"
+
+  pdf = FasTMassMailing::LettersPDF.new(content_name: options[:content_name])
+end
 
 case action
 when 'letters'
-  pdf = FasTMassMailing::LettersPDF.new
-
   addresses.each_with_index do |address, i|
     puts "Adding letter #{i + 1} of #{addresses.count}"
     pdf.add_letter(address)
@@ -38,4 +59,14 @@ when 'list'
       f.puts "#{address[:name]} – #{address[:street]} – #{address[:plz]} #{address[:city]}\n"
     end
   end
+
+when 'sample'
+  pdf.add_letter(
+    name: 'Max Mustermann',
+    street: 'Musterstraße 1',
+    plz: '12345',
+    city: 'Musterhausen'
+  )
+
+  pdf.render_file('sample.pdf')
 end

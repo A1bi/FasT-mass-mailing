@@ -1,12 +1,17 @@
 # frozen_string_literal: true
 
 require 'prawn'
+require 'prawn/measurement_extensions'
 require 'prawn-svg'
 
 module FasTMassMailing
   class LettersPDF < Prawn::Document
-    def initialize
-      super page_size: 'A4', page_layout: :portrait, margin: [40, 65]
+    def initialize(content_name:)
+      @page_margin = [40, 65]
+
+      super page_size: 'A4', page_layout: :portrait, margin: @page_margin
+
+      @content_name = content_name
 
       fill_color '000000'
       stroke_color '000000'
@@ -30,7 +35,9 @@ module FasTMassMailing
       draw_address(address)
 
       move_down 60
-      draw_text
+      draw_content
+
+      draw_folding_marks
 
       start_new_page
     end
@@ -58,14 +65,11 @@ module FasTMassMailing
       text "#{address[:plz]} #{address[:city]}"
     end
 
-    def draw_text
-      draw_content('first')
-      move_down 20
+    def draw_content
+      text File.read("content/#{@content_name}.txt"), inline_format: true
 
-      svg File.read('assets/images/title.svg'), width: bounds.width * 0.6, position: :center
-
-      move_down 20
-      draw_content('second')
+      # move_down 20
+      # svg File.read('assets/images/title.svg'), width: bounds.width * 0.6, position: :center
 
       move_down 15
       font 'Dancing Script', size: 16 do
@@ -73,8 +77,20 @@ module FasTMassMailing
       end
     end
 
-    def draw_content(part)
-      text File.read("content/#{part}.txt"), inline_format: true
+    def draw_folding_marks
+      float do
+        bounding_box(
+          [-@page_margin[1], bounds.height + @page_margin[0]],
+          width: bounds.width + @page_margin[1] * 2,
+          height: bounds.height + @page_margin[0] * 2
+        ) do
+          stroke do
+            line_width 0.1.mm
+            horizontal_line 5.mm, 1.cm, at: 87.mm
+            horizontal_line 5.mm, 1.cm, at: 192.mm
+          end
+        end
+      end
     end
   end
 end
