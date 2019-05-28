@@ -7,11 +7,11 @@ require 'prawn-svg'
 module FasTMassMailing
   class LettersPDF < Prawn::Document
     def initialize(content_name:)
-      @page_margin = [40, 65]
+      @page_margin = [0, 20.mm]
+      @content_name = content_name
+      @first_page_added = false
 
       super page_size: 'A4', page_layout: :portrait, margin: @page_margin
-
-      @content_name = content_name
 
       fill_color '000000'
       stroke_color '000000'
@@ -30,34 +30,39 @@ module FasTMassMailing
     end
 
     def add_letter(address)
+      if @first_page_added
+        start_new_page
+      else
+        @first_page_added = true
+      end
+
       draw_logo
 
       draw_address(address)
 
-      move_down 60
+      move_down 2.5.cm
       draw_content
 
       draw_folding_marks
-
-      start_new_page
     end
 
     private
 
     def draw_logo
       float do
-        svg File.read('assets/images/logo.svg'), width: bounds.width * 0.25, position: :right
+        move_down 2.cm
+        svg File.read('assets/images/logo.svg'), width: 5.cm, position: :right
       end
     end
 
     def draw_address(address)
-      move_down 110
+      move_down 45.mm
 
       font_size 7 do
         text 'Freilichtbühne am schiefen Turm e. V. – Mausbachstraße 11 – 56759 Kaisersesch'
       end
 
-      move_down 10
+      move_down 5.mm
 
       font_size 10
       text address[:name]
@@ -71,7 +76,7 @@ module FasTMassMailing
       # move_down 20
       # svg File.read('assets/images/title.svg'), width: bounds.width * 0.6, position: :center
 
-      move_down 15
+      move_down 1.cm
       font 'Dancing Script', size: 16 do
         text 'Ihre Freilichtbühne am schiefen Turm'
       end
@@ -86,8 +91,8 @@ module FasTMassMailing
         ) do
           stroke do
             line_width 0.1.mm
-            horizontal_line 5.mm, 1.cm, at: 87.mm
-            horizontal_line 5.mm, 1.cm, at: 192.mm
+            horizontal_line 2.mm, 0.8.cm, at: bounds.height - 87.mm
+            horizontal_line 2.mm, 0.8.cm, at: bounds.height - 192.mm
           end
         end
       end
