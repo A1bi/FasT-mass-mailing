@@ -40,7 +40,7 @@ module FasTMassMailing
 
       draw_address(address)
 
-      move_down 2.5.cm
+      move_down 2.cm
       draw_content
 
       draw_folding_marks
@@ -71,12 +71,21 @@ module FasTMassMailing
     end
 
     def draw_content
-      text File.read("content/#{@content_name}.txt"), inline_format: true
+      content = File.read("content/#{@content_name}.txt")
+      svgs = content.scan(/###svg:(\w+):(\d\.\d)###/).to_a
 
-      # move_down 20
-      # svg File.read('assets/images/title.svg'), width: bounds.width * 0.6, position: :center
+      content.split(/\n*###svg:\w+:\d\.\d###\n*/).each_with_index do |part, i|
+        text part, inline_format: true
 
-      move_down 1.cm
+        svg_file = svgs[i]
+        next if svg_file.nil?
+
+        move_down 7.mm
+        svg File.read("assets/images/#{svg_file[0]}.svg"), width: bounds.width * svg_file[1].to_f, position: :center
+        move_down 7.mm
+      end
+
+      move_down 5.mm
       font 'Dancing Script', size: 16 do
         text 'Ihre Freilichtbühne am schiefen Turm'
       end
