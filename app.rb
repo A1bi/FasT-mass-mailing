@@ -14,23 +14,23 @@ OptionParser.new do |opts|
   opts.banner = "Usage: app.rb #{action} [options]"
 
   unless action == 'list'
-    opts.on('--content CONTENT', 'specify content') do |value|
+    opts.on('--content CONTENT', 'content file') do |value|
       options[:content_name] = value
     end
   end
 
   unless action == 'sample'
-    opts.on('--vcf-file PATH', 'specify content') do |value|
-      options[:vcf_path] = value
+    opts.on('--address-file PATH', 'file containing all addresses') do |value|
+      options[:addresses_path] = value
     end
   end
 end.parse!
 
 unless action == 'sample'
-  abort('Specified VCF file does not exist.') unless File.exist? options[:vcf_path]
+  abort('Specified address file does not exist.') unless File.exist? options[:addresses_path]
 
   begin
-    addresses = FasTMassMailing::AddressParser.parse_vcf_file(options[:vcf_path])
+    addresses = FasTMassMailing::AddressParser.parse_file(options[:addresses_path])
   rescue RuntimeError => e
     abort(e.to_s)
   end
