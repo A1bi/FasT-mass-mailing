@@ -1,74 +1,44 @@
 # frozen_string_literal: true
 
-require 'prawn'
-require 'prawn/measurement_extensions'
-require 'prawn-svg'
+require './pdf'
 
 module FasTMassMailing
-  class LettersPDF < Prawn::Document
+  class LettersPDF < PDF
     def initialize(content_name:)
       @page_margin = [0, 20.mm]
       @content_name = content_name
-      @first_page_added = false
 
       super page_size: 'A4', page_layout: :portrait, margin: @page_margin
 
-      fill_color '000000'
-      stroke_color '000000'
-
-      font_name = 'OpenSans'
-      fonts = {}
-      %i[normal bold italic].each do |style|
-        (fonts[font_name] ||= {})[style] = "assets/fonts/#{font_name}-#{style}.ttf"
+      create_stamp('logo') do
+        draw_logo
       end
-      fonts['Dancing Script'] = { normal: 'assets/fonts/DancingScript-Regular.ttf' }
-      font_families.update(fonts)
-
-      font font_name
-      font_size 11
-      default_leading 3
     end
 
     def add_letter(address)
-      if @first_page_added
-        start_new_page
-      else
-        @first_page_added = true
-      end
+      add_page
 
-      draw_logo
+      draw_stamp('logo')
 
+      move_down 45.mm
       draw_address(address)
 
-      move_down 1.5.cm
-      draw_content
+      move_down 15.mm
+      draw_stamp('content') do
+        draw_content
+        draw_disclaimer
+      end
 
-      draw_disclaimer
-      draw_folding_marks
+      draw_stamp('folding_marks') do
+        draw_folding_marks
+      end
     end
 
     private
 
     def draw_logo
-      float do
-        move_down 2.cm
-        svg File.read('assets/images/logo.svg'), width: 5.cm, position: :right
-      end
-    end
-
-    def draw_address(address)
-      move_down 45.mm
-
-      font_size 7 do
-        text 'Freilichtbühne am schiefen Turm e. V. – Mausbachstraße 11 – 56759 Kaisersesch'
-      end
-
-      move_down 5.mm
-
-      font_size 10
-      text address[:name]
-      text address[:street]
-      text "#{address[:plz]} #{address[:city]}"
+      move_down 2.cm
+      svg File.read('assets/images/logo.svg'), width: 5.cm, position: :right
     end
 
     def draw_content

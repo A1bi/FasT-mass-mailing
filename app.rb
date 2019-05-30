@@ -4,16 +4,17 @@ require 'optparse'
 require 'byebug'
 require './address_parser'
 require './letters_pdf'
+require './envelopes_pdf'
 
 action = ARGV.first
 options = {}
 
-abort('Please specify one of the following actions: list, letters, sample.') unless %w[letters list sample].include? action
+abort('Please specify one of the following actions: list, letters, sample.') unless %w[letters envelopes list sample].include? action
 
 OptionParser.new do |opts|
   opts.banner = "Usage: app.rb #{action} [options]"
 
-  unless action == 'list'
+  if %w[letters sample].include? action
     opts.on('--content CONTENT', 'content file') do |value|
       options[:content_name] = value
     end
@@ -22,6 +23,12 @@ OptionParser.new do |opts|
   unless action == 'sample'
     opts.on('--address-file PATH', 'file containing all addresses') do |value|
       options[:addresses_path] = value
+    end
+  end
+
+  if action == 'envelopes'
+    opts.on('--header-file PATH', 'header svg file') do |value|
+      options[:header_filename] = value
     end
   end
 end.parse!
@@ -38,10 +45,15 @@ unless action == 'sample'
   addresses.sort_by! { |address| address[:plz] }
 end
 
-unless action == 'list'
+if action == 'letters' || action == 'sample'
   abort('Specified content file does not exist.') unless File.exist? "content/#{options[:content_name]}.txt"
 
   pdf = FasTMassMailing::LettersPDF.new(content_name: options[:content_name])
+
+elsif action == 'envelopes'
+  abort('Specified header file does not exist.') unless File.exist? "assets/images/#{options[:header_filename]}.svg"
+
+  pdf = FasTMassMailing::EnvelopesPDF.new(header_filename: options[:header_filename])
 end
 
 case action
@@ -52,6 +64,14 @@ when 'letters'
   end
 
   pdf.render_file('letters.pdf')
+
+when 'envelopes'
+  addresses.each_with_index do |address, i|
+    puts "Adding envelope #{i + 1} of #{addresses.count}"
+    pdf.add_envelope(address)
+  end
+
+  pdf.render_file('envelopes.pdf')
 
 when 'list'
   open('addresses.txt', 'w') do |f|
