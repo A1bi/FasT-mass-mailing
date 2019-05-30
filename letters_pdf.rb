@@ -40,9 +40,10 @@ module FasTMassMailing
 
       draw_address(address)
 
-      move_down 2.cm
+      move_down 1.5.cm
       draw_content
 
+      draw_disclaimer
       draw_folding_marks
     end
 
@@ -89,6 +90,15 @@ module FasTMassMailing
       font 'Dancing Script', size: 16 do
         text 'Ihre Freilichtbühne am schiefen Turm'
       end
+    end
+
+    def draw_disclaimer
+      text_box(
+        'Sollten Sie keine Werbung des Freilichtbühne am schiefen Turm e. V. wünschen, können Sie jederzeit per Nachricht in Textform an unsubscribe@theater-kaisersesch.de oder telefonisch unter (02653) 282709 der weiteren Verwendung Ihrer Daten zu Werbezwecken widersprechen.',
+        at: [0, 40],
+        size: 8.5,
+        style: :italic
+      )
     end
 
     def draw_folding_marks
